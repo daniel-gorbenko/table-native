@@ -1,0 +1,144 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+::selection {
+  background-color: transparent;
+}
+
+.hidden {
+  display: none;
+}
+
+.app {
+  margin: 100px auto;
+}
+
+form {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  margin-left: -200px;
+  margin-top: 100px;
+  width: 400px;
+}
+
+form h1 {
+  margin-bottom: 20px;
+}
+
+form input {
+  width: 400px;
+  border: none;
+  border-bottom: 1px solid #e2e2e2;
+  margin: 20px auto;
+  outline: none;
+  padding: 10px 0;
+  font-size: 14px;
+  line-height: 14px;
+}
+
+table {
+  /* border-collapse: separate; */
+  border-spacing: 0;
+  margin: 100px auto;
+}
+
+table caption {
+  text-align: left;
+  padding-left: 29px;
+  border-left: 1px solid #000;
+  margin-bottom: 30px;
+}
+
+table caption h2 {
+  margin-bottom: 10px;
+}
+
+table tr td {
+  width: 90px;
+  height: 65px;
+  cursor: pointer;
+  position: relative;
+  font-family: Arial, sans-serif;
+  border: 1px solid #fff;
+  /* border-radius:10px; */
+  text-align: center;
+  color: #202124;
+  font-size: 14px;
+  letter-spacing: .2px;
+  /* transition: background-color, color 0.1s ease; */
+}
+
+table tr {
+  border-bottom: 1px solid #f2f2f2;
+}
+
+table tr td:hover {
+  background-color: #f1f3f4;
+  /* color: #fff; */
+}
+
+table-cell--sum,
+table tfoot td {
+  font-weight: 600;
+}
+
+table td.higlight {
+  background-color: #e6f4ea;
+  color: #188038;
+}
+
+table tr td .percent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+  display: none;
+  background: #e6f4ea;
+}
+
+table tr td .percent_value {
+  display: none;
+  position: relative;
+  z-index: 2;
+  color: #188038;
+  font-weight: 600;
+}
+
+table tr.percent td .percent_value {
+  display: inline;
+}
+
+table tr.percent td .percent {
+  display: block;
+}
+
+table tr.percent td .amount {
+  display: none;
+}
+
+table tr td.sum_cell {
+  font-weight: 600;
+}
+
+table tr.percent td.sum_cell .amount {
+  display: block;
+}
+
+table tr.percent td.sum_cell .percent,
+table tr.percent td.sum_cell .percent_value {
+  display: none;
+}
+
+table .table-btn {
+  text-decoration: none;
+  color: #000;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 0;
+  font-size: 14px;
+  line-height: 14px;
+}
