@@ -76,8 +76,6 @@ class Component {
 
   addClassName(className) {
     this.el.className += ' ' + className;
-
-    if(this.el.className.indexOf("undefined") !== -1) debugger
   }
 
   removeClassName(className) {
@@ -86,8 +84,6 @@ class Component {
       .replace(new RegExp("\\s+" + className + ""), '')
       .replace(new RegExp("" + className + "\\s+"), '')
       .replace(new RegExp("" + className + ""), '');
-
-      if(this.el.className.indexOf("undefined") !== -1) debugger
   }
 }
 
@@ -123,6 +119,51 @@ class Cell extends Component {
       if(this.data.higlight()) this.addClassName('higlight');
       if(!this.data.higlight()) this.removeClassName('higlight');
     }
+  }
+}
+
+class DeleteRowSpan extends Component {
+  constructor(options) {
+    super(options);
+  }
+
+  render() {
+    this.container.appendChild(this.el);
+    this.refresh();
+  }
+
+  refresh() {
+    this.el.innerHTML = Template.template(this.innerTemplate, this.prepareData(this.data));
+  }
+}
+
+class SumCell extends Component {
+  constructor(options) {
+    super(options);
+  }
+
+  render() {
+    this.container.appendChild(this.el);
+
+    this.refresh();
+  }
+
+  refresh() {
+    this.el.innerHTML = Template.template(this.innerTemplate, this.prepareData(this.data));
+
+    this.deleteRowSpan = new DeleteRowSpan({
+      container: this.el.getElementsByClassName('delete_row')[0],
+      template: document.getElementById('template-delete_row').innerHTML,
+      state: this.state,
+
+      events: {
+        'click': [(e) => this.state.onRowRemove(e, this.optional.row)]
+      },
+      data: {},
+      optional: {cell: this}
+    });
+
+    this.deleteRowSpan.render();
   }
 }
 
@@ -162,10 +203,11 @@ class Row extends Component {
 
     }
 
-    this.sumCell = new Cell({
+    this.sumCell = new SumCell({
       container: this.el,
       className: 'sum_cell',
-      template: document.getElementById('template-cell').innerHTML,
+      template: document.getElementById('template-sum_cell').innerHTML,
+      state: this.state,
 
       events: {
         'mouseover': [this.state.onSumCellOver],
@@ -352,6 +394,7 @@ class Table extends Component {
     this.state.onSumCellOver = this.onSumCellOver.bind(this);
     this.state.onSumCellOut = this.onSumCellOut.bind(this);
     this.state.onCellSelect = this.onCellSelect.bind(this);
+    this.state.onRowRemove = this.onRowRemove.bind(this);
   }
 
   onCellSelect(e, that) {
@@ -477,9 +520,7 @@ class Table extends Component {
       template: document.getElementById('template-row').innerHTML,
       state: this.state,
 
-      events: {
-        'contextmenu': [this.onRowRemove.bind(this)]
-      },
+      events: {},
       optional: {cols: this.cols, row: this.table[rowCoord]}
     })
 
