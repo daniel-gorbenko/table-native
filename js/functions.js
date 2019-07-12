@@ -405,7 +405,10 @@ class Table extends Component {
 
     this.higlighted = [];
 
+    let sortedCellsLength = this.sortedCells.length;
+
     for(let selected = 0, i = 0; selected < this.x; i++) {
+      if(sortedCellsLength === i) return;
       if(this.sortedCells[i].cell === that.optional.cell) continue;
 
       this.higlighted[selected] = this.sortedCells[i];
@@ -433,7 +436,10 @@ class Table extends Component {
   }
 
   unHiglightProcess() {
+    let higlightedLength = this.higlighted.length;
+
     for(let i = 0; i < this.x; i++) {
+      if(higlightedLength === i) return;
       this.unHiglightCell(this.higlighted[i].row, this.higlighted[i].col);
     }
   }
