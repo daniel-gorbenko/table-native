@@ -7,7 +7,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -21,9 +23,10 @@
   "bugs": {
     "url": "https://github.com/daniel-gorbenko/table-native/issues"
   },
-  "homepage": "https://github.com/daniel-gorbenko/table-native#readme",
+  "homepage": "https://daniel-gorbenko.github.io/table-native/",
   "devDependencies": {},
   "dependencies": {
+    "gh-pages": "^2.0.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1"
