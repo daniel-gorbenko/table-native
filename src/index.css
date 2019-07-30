@@ -109,7 +109,7 @@ table tr td .percent_value {
   font-weight: 600;
 }
 
-table tr.percent td .percent_value {
+/* table tr.percent td .percent_value {
   display: inline;
 }
 
@@ -118,6 +118,18 @@ table tr.percent td .percent {
 }
 
 table tr.percent td .amount {
+  display: none;
+} */
+
+table tr td.over .percent_value {
+  display: inline;
+}
+
+table tr td.over .percent {
+  display: block;
+}
+
+table tr td.over .amount {
   display: none;
 }
 
