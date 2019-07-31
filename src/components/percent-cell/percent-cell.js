@@ -3,15 +3,13 @@ import Cell from '../cell/cell';
 import React from 'react';
 
 export default (props) => {
-  let classes = [
+  let className = [
     props.higlight ? 'higlight' : '',
     props.over ? 'over' : ''
-  ];
-
-  let className = classes.join(' ');
+  ].join(' ');
 
   let style = {
-    height: props.percentValue + '%'
+    height: `${props.percentValue}%`
   };
 
   return (

@@ -1,75 +1,54 @@
-import React from 'react';
+import React, {useState} from 'react';
 
 import PageCreateTable from '../page-create-table/page-create-table';
 import PageTable from '../page-table/page-table';
 
-export default class App extends React.Component {
-  constructor(props) {
-    super(props);
+export default (props) => {
+  let [rows, setRows] = useState('');
+  let [cols, setCols] = useState('');
+  let [x, setX] = useState('');
+  let [page, setPage] = useState('CreateTable');
 
-    this.state = {
-      values: {
-        rows: '',
-        cols: '',
-        x: ''
-      },
-      page: 'CreateTable'
-    };
-  }
-
-  onSubmit = (e) => {
+  function onSubmit (e) {
     e.preventDefault();
 
-    this.togglePage('Table');
-  }
+    setPage('Table');
+  };
 
-  togglePage = (page) => {
-    this.setState({
-      page: page
-    });
-  }
-
-  onChange = (e, name) => {
-    this.setState({
-      values: Object.assign({}, this.state.values, {
-        [name]: parseInt(e.target.value)
-      })
-    });
-  }
-
-  onRowAdd = (e) => {
-    this.setState((state, cb) => {
-      return {values: Object.assign({}, state.values, {rows: state.values.rows + 1})};
-    });
-  }
-
-  onRowRemove = (e) => {
-    this.setState((state, cb) => {
-      return {values: Object.assign({}, state.values, {rows: state.values.rows - 1})};
-    });
-  }
-
-  render() {
-    let page;
-
-    switch(this.state.page) {
-      case 'CreateTable': page = <PageCreateTable
-        onSubmit={this.onSubmit}
-        onChange={this.onChange}
-        values={this.state.values}/>;
-        break;
-      case 'Table': page = <PageTable
-        rows={this.state.values.rows}
-        cols={this.state.values.cols}
-        x={this.state.values.x}
-        amountDigits={3}
-        onRowAdd={this.onRowAdd}
-        onRowRemove={this.onRowRemove}
-        />;
-        break;
+  function onChange(e, name) {
+    switch(name) {
+      case 'rows': setRows(parseInt(e.target.value)); break;
+      case 'cols': setCols(parseInt(e.target.value)); break;
+      case 'x': setX(parseInt(e.target.value)); break;
       default: break;
     }
+  };
 
-    return page;
+  function onRowAdd() {
+    setRows(rows + 1);
+  };
+
+  function onRowRemove() {
+    setRows(rows - 1);
+  };
+
+  switch(page) {
+    case 'CreateTable':
+      return <PageCreateTable
+        onSubmit={onSubmit}
+        onChange={onChange}
+        values={{rows, cols, x}}/>;
+
+    case 'Table':
+      return <PageTable
+        rows={rows}
+        cols={cols}
+        x={x}
+        amountDigits={3}
+        onRowAdd={onRowAdd}
+        onRowRemove={onRowRemove}/>;
+
+    default:
+      break;
   }
-}
+};

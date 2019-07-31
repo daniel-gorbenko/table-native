@@ -1,156 +1,167 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 
 import Cell from '../cell/cell';
 import PercentCell from '../percent-cell/percent-cell';
 import SumCell from '../sum-cell/sum-cell';
 import Row from '../row/row';
 
-export default class Table extends React.Component {
-  constructor(props) {
-    super(props);
+export default (props) => {
+  let amountDigitsIndex = props.amountDigits + 2;
 
-    this.amountDigitsIndex = props.amountDigits + 2;
+  let rowIdList = useRef([]);
+  let rowId = useRef(-1);
+  let higlighted = useRef([]);
+  let sortedCells = useRef([]);
+  let [table, setTable] = useState(generateTableData);
+  let [colsSums, setColsSums] = useState(getColsSums(props.rows, props.cols, table));
 
-    this.rowIdList = [];
-    this._currentRowId = -1;
-
-    this.state = {
-      table: this.generateTableData()
-    };
-
-    this.state.sums = {
-      rows: this.getRowsSums(),
-      cols: this.getColsSums()
-    };
+  function getNextRowId() {
+    return ++rowId.current;
   }
 
-  getNextRowId() {
-    return ++this._currentRowId;
-  }
-
-  generateTableData() {
+  function generateTableData() {
     let table = [];
+    let isFirstRender = rowId.current === -1;
 
-    for(let i = 0; i < this.props.rows; i++) {
-      table[i] = this.generateRowData(i);
-      this.rowIdList[i] = this.getNextRowId();
+    for(let i = 0; i < props.rows; i++) {
+      table[i] = generateRowData(i);
+
+      if(isFirstRender) {
+        rowId.current = rowIdList.current[i] = getNextRowId();
+      }
     }
 
     return table;
   }
 
-  generateRowData(i) {
+  function generateRowData(i) {
     let row = [];
 
-    for(let j = 0; j < this.props.cols; j++) {
-      row[j] = this.generateCellData(i, j);
+    for(let j = 0; j < props.cols; j++) {
+      row[j] = generateCellData(i, j);
     }
 
     return row;
   }
 
-  generateCellData(x, y) {
-    let idTemplate = 'x_y';
-
+  function generateCellData(x, y) {
     return {
-      id: idTemplate.replace('x', x).replace('y', y),
-      amount: this.generateAmount()
+      id: `${x}${y}`,
+      amount: generateAmount()
     };
   }
 
-  generateAmount() {
+  function generateAmount() {
     return parseInt(Math.random()
                       .toString()
-                      .substring(2, this.amountDigitsIndex)
+                      .substring(2, amountDigitsIndex)
                     );
   }
 
-  calcSums() {
-    let sums = {
-        rows: this.getRowsSums(),
-        cols: this.getColsSums()
-    };
-
-    this.setState({sums});
+  function calcSums(rows, cols, table) {
+    setColsSums(getColsSums(rows, cols, table));
   }
 
-  getRowsSums() {
-    let rows = [];
-
-    for(let i = 0; i < this.props.rows; i++) {
-      rows[i] = this.calcSumByRow(i);
-    }
-
-    return rows;
-  }
-
-  getColsSums() {
+  function getColsSums(rows, colsCount, table) {
     let cols = [];
 
-    for(let i = 0; i < this.props.cols; i++) {
-      cols[i] = this.calcSumByCol(i);
+    for(let i = 0; i < colsCount; i++) {
+      cols[i] = calcSumByCol(i, table, rows);
     }
 
     return cols;
   }
 
-  getSumsByCell(row, col) {
-    return {
-      row: this.calcSumByRow(row),
-      col: this.calcSumByCol(col)
-    }
-  }
-
-  calcSumByRow(row) {
+  function calcSumByRow(row) {
     let sumByRow = 0;
 
-    for(let i = 0; i < this.props.cols; i++) {
-      sumByRow += this.state.table[row][i].amount;
+    for(let i = 0; i < props.cols; i++) {
+      sumByRow += table[row][i].amount;
     }
 
     return sumByRow;
   }
 
-  calcSumByCol(col) {
+  function calcSumByCol(col, table, rows) {
     let sumByCol = 0;
 
-    for(let i = 0; i < this.props.rows; i++) {
-      sumByCol += this.state.table[i][col].amount;
+    for(let i = 0; i < rows; i++) {
+      sumByCol += table[i][col].amount;
     }
 
     return sumByCol;
   }
 
-  onCellClick(e, row, col) {
-    // TODO:
-    this.setState(state => {
-      let newTableState = [...this.state.table];
-      newTableState[row] = [...newTableState[row]];
-      newTableState[row][col] = Object.assign({}, newTableState[row][col], {
-        amount: newTableState[row][col].amount + 1
+  function getPercent(index, value) {
+    return (value / calcSumByRow(index) * 100).toFixed(2);
+  }
+
+  function onRowRemove(e, row) {
+    e.preventDefault();
+
+    table.splice(row, 1);
+    rowIdList.current.splice(row, 1);
+
+    setTable(table);
+    calcSums(props.rows - 1, props.cols, table);
+
+    props.onRowRemove(e);
+  }
+
+  function onRowAdd(e, row) {
+    table[table.length] = generateRowData(table.length);
+    rowIdList.current[rowIdList.current.length] = getNextRowId();
+
+    setTable(table);
+    calcSums(props.rows + 1, props.cols, table);
+
+    props.onRowAdd(e);
+  }
+
+  function onSumCellOver(row) {
+    setTable(table => {
+      table[row].forEach((cell) => {
+        cell.over = true;
       });
 
-      return {table: newTableState};
-    }, () => {
-      this.calcSums();
-
-      this.unHiglightProcess();
-      this.higlightProcess(row, col);
+      return [...table];
     });
   }
 
-  onCellOver(e, row, col) {
-    this.higlightProcess(row, col);
+  function onSumCellOut(row) {
+    setTable(table => {
+      table[row].forEach((cell) => {
+        cell.over = false;
+      });
+
+      return [...table];
+    });
   }
 
-  onCellOut(e, row, col) {
-    this.unHiglightProcess();
+  function onCellClick(e, row, col) {
+    setTable(table => {
+      table[row][col].amount += 1;
+
+      calcSums(props.rows, props.cols, table);
+      unHiglightProcess();
+      higlightProcess(row, col);
+
+      return [...table];
+    });
   }
 
-  higlightProcess(cellRow, cellCol) {
-    let cellSelected = this.state.table[cellRow][cellCol];
+  function onCellOver(e, row, col) {
+    higlightProcess(row, col);
+  }
 
-    this.sortedCells = this.state.table.reduce((cells, row, rowIndex) => {
+  function onCellOut(e, row, col) {
+    unHiglightProcess();
+  }
+
+  function higlightProcess(cellRow, cellCol) {
+    let cellSelected = table[cellRow][cellCol];
+
+    sortedCells.current = table.reduce((cells, row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         cells.push({
           row: rowIndex,
@@ -163,145 +174,84 @@ export default class Table extends React.Component {
       return cells;
     }, []);
 
-    this.sortedCells = this.sortedCells.sort((a, b) => {
+    sortedCells.current = sortedCells.current.sort((a, b) => {
       if(a.amountDiff < b.amountDiff) return -1;
       if(a.amountDiff > b.amountDiff) return 1;
       if(a.amountDiff === b.amountDiff) return 0;
     });
 
-    this.higlighted = [];
+    higlighted.current = [];
 
-    let sortedCellsLength = this.sortedCells.length;
+    let sortedCellsLength = sortedCells.current.length;
 
-    for(let selected = 0, i = 0; selected < this.props.x; i++) {
+    for(let selected = 0, i = 0; selected < props.x; i++) {
       if(sortedCellsLength === i) return;
-      if(this.sortedCells[i].cell === cellSelected) continue;
 
-      this.higlighted[selected] = this.sortedCells[i];
+      if(sortedCells.current[i].cell === cellSelected) continue;
 
-      this.higlightCell(this.sortedCells[i].row, this.sortedCells[i].col);
+      higlighted.current[selected] = sortedCells.current[i];
+
+      higlightCell(sortedCells.current[i].row, sortedCells.current[i].col);
       selected++;
     }
   }
 
-  unHiglightProcess() {
-    let higlightedLength = this.higlighted.length;
+  function unHiglightProcess() {
+    let higlightedLength = higlighted.current.length;
 
-    for(let i = 0; i < this.props.x; i++) {
+    for(let i = 0; i < props.x; i++) {
       if(higlightedLength === i) return;
-      this.unHiglightCell(this.higlighted[i].row, this.higlighted[i].col);
+
+      unHiglightCell(higlighted.current[i].row, higlighted.current[i].col);
     }
   }
 
-  higlightCell(row, col) {
-    this.setCellHighlight(row, col, true);
+  function higlightCell(row, col) {
+    setCellHighlight(row, col, true);
   }
 
-  unHiglightCell(row, col) {
-    this.setCellHighlight(row, col, false);
+  function unHiglightCell(row, col) {
+    setCellHighlight(row, col, false);
   }
 
-  setCellHighlight(row, col, light) {
-    this.setState(state => {
-      // let state = Object.assign({}, stateCurrent);
-      state.table[row][col].higlight = light;
+  function setCellHighlight(row, col, light) {
+    setTable(table => {
+      table[row][col].higlight = light;
 
-      return state;
+      return [...table];
     });
   }
 
-  getPercent(index, value) {
-    return (value / this.calcSumByRow(index) * 100).toFixed(2);
+  let rows = [];
+
+  for(let i = 0; i < props.rows; i++) {
+    rows.push(
+      <Row key={rowIdList.current[i]}>
+        {table[i].map((cell, colIndex) =>
+          <PercentCell
+            key={colIndex}
+            percentValue={getPercent(i, cell.amount)}
+            onClick={(e) => onCellClick(e, i, colIndex)}
+            onMouseOver={(e) => onCellOver(e, i, colIndex)}
+            onMouseOut={(e) => onCellOut(e, i, colIndex)}
+            over={cell.over}
+            value={cell.amount}
+            higlight={cell.higlight}/>
+        )}
+        <SumCell
+          onMouseOver={(e) => onSumCellOver(i)}
+          onMouseOut={(e) => onSumCellOut(i)}
+          onRowRemove={(e) => onRowRemove(e, i)}
+          value={table[i].reduce((s, cell) =>  s + cell.amount, 0)}/>
+      </Row>
+    );
   }
 
-  onSumCellOver(row) {
-    this.setState(state => {
-      state.table[row].forEach((cell) => {
-        cell.over = true;
-      });
-
-      return {};
-    });
-  }
-
-  onSumCellOut(row) {
-    this.setState(state => {
-      state.table[row].forEach((cell) => {
-        cell.over = false;
-      });
-
-      return {};
-
-    });
-  }
-
-  onRowAdd = (e) => {
-    e.preventDefault();
-
-    this.setState(state => {
-
-      let table = [...state.table];
-
-      table[table.length] = this.generateRowData(state.table.length);
-      this.rowIdList[this.rowIdList.length] = this.getNextRowId();
-
-      return {table: table};
-    }, () => {
-      this.calcSums();
-    });
-
-    this.props.onRowAdd(e);
-  }
-
-  onRowRemove = (e, row) => {
-    e.preventDefault();
-
-    this.props.onRowRemove(e);
-
-    this.setState(state => {
-
-      let table = [...state.table];
-
-      table.splice(row, 1);
-      this.rowIdList.splice(row, 1);
-
-      return {table: table};
-    }, () => {
-      this.calcSums();
-    });
-  }
-
-  render() {
-    let rows = [];
-
-    for(let i = 0; i < this.props.rows; i++) {
-      rows.push(
-        <Row key={this.rowIdList[i]} dataAttr={this.rowIdList[i]}>
-          {this.state.table[i].map((cell, colIndex) =>
-            <PercentCell
-              key={colIndex}
-              percentValue={this.getPercent(i, cell.amount)}
-              onClick={(e) => this.onCellClick(e, i, colIndex)}
-              onMouseOver={(e) => this.onCellOver(e, i, colIndex)}
-              onMouseOut={(e) => this.onCellOut(e, i, colIndex)}
-              over={cell.over}
-              value={cell.amount}
-              higlight={cell.higlight}/>
-          )}
-          <SumCell
-            onMouseOver={(e) => this.onSumCellOver(i)}
-            onMouseOut={(e) => this.onSumCellOut(i)}
-            onRowRemove={(e) => this.onRowRemove(e, i)}
-            value={this.state.table[i].reduce((s, cell) =>  s + cell.amount, 0)}/>
-        </Row>
-      );
-    }
-
-    return (
-      <table>
+  return (
+    <table>
         <caption>
           <h2>Сгенерированная таблица</h2>
-          <a href="#" className="table-btn" onClick={this.onRowAdd}>Добавить строку</a>
+          <button className="table-btn" onClick={onRowAdd}>Добавить строку</button>
         </caption>
         <thead></thead>
         <tbody>
@@ -309,12 +259,11 @@ export default class Table extends React.Component {
         </tbody>
         <tfoot>
           <Row>
-            {this.state.sums.cols.map((sum, index) =>
+            {colsSums.map((sum, index) =>
               <Cell key={index} value={sum}/>
             )}
           </Row>
         </tfoot>
       </table>
-    );
-  }
-}
+  );
+};
