@@ -2,7 +2,7 @@ import Cell from '../cell/cell';
 
 import React from 'react';
 
-export default (props) => {
+const PercenterCell = (props) => {
   let className = [
     props.higlight ? 'higlight' : '',
     props.over ? 'over' : ''
@@ -22,6 +22,8 @@ export default (props) => {
     </Cell>
   );
 }
+
+export default PercenterCell;
 
 //   shouldComponentUpdate(nextProps, nextState) {
 //     if(nextProps.higlight === this.props.higlight

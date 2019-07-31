@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import PageCreateTable from '../page-create-table/page-create-table';
 import PageTable from '../page-table/page-table';
 
-export default (props) => {
+const App = (props) => {
   let [rows, setRows] = useState('');
   let [cols, setCols] = useState('');
   let [x, setX] = useState('');
@@ -52,3 +52,5 @@ export default (props) => {
       break;
   }
 };
+
+export default App;

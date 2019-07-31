@@ -5,7 +5,7 @@ import PercentCell from '../percent-cell/percent-cell';
 import SumCell from '../sum-cell/sum-cell';
 import Row from '../row/row';
 
-export default (props) => {
+const Table = (props) => {
   let amountDigitsIndex = props.amountDigits + 2;
 
   let rowIdList = useRef([]);
@@ -267,3 +267,5 @@ export default (props) => {
       </table>
   );
 };
+
+export default Table;

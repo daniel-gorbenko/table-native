@@ -2,7 +2,7 @@ import Cell from '../cell/cell';
 
 import React from 'react';
 
-export default (props) => {
+const SumCell = (props) => {
   return (
     <Cell className="sum_cell" value={props.value}
       onMouseOver={props.onMouseOver}
@@ -11,3 +11,5 @@ export default (props) => {
     </Cell>
   );
 }
+
+export default SumCell;
