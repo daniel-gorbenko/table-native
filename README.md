@@ -1,5 +1,5 @@
 # table-native
-## Table component created using native JavaScript
+## Table component created using ReactJS
 
 ### Performance measures and influence of hooks:
 [Google Spreadsheets | Measures](https://docs.google.com/spreadsheets/d/1CJvVPwTtfeuDmq0r2Pnb3TqEZ9U03mbG2ngb5DHCWOo/edit?usp=sharing)
