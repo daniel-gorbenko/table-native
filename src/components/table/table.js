@@ -1,8 +1,6 @@
 import React from 'react';
 
 import Cell from '../cell/cell';
-import PercentCell from '../percent-cell/percent-cell';
-import SumCell from '../sum-cell/sum-cell';
 import Row from '../row/row';
 import TableRow from '../table-row/table-row';
 
@@ -12,6 +10,7 @@ const Table = class Table extends React.Component {
 
     this.amountDigitsIndex = props.amountDigits + 2;
 
+    this.higlighted = [];
     this.rowIdList = [];
     this.rowChanges = [];
     this._currentRowId = -1;
@@ -59,13 +58,11 @@ const Table = class Table extends React.Component {
   }
 
   generateCellData(x, y) {
-    let idTemplate = 'x_y';
-
-    return {
-      id: idTemplate.replace('x', x).replace('y', y),
-      amount: this.generateAmount()
-    };
-  }
+     return {
+       id: `${x}${y}`,
+       amount: this.generateAmount()
+     };
+   }
 
   generateAmount() {
     return parseInt(Math.random()
@@ -143,27 +140,30 @@ const Table = class Table extends React.Component {
         amount: newTableState[row][col].amount + 1
       });
 
+      newTableState = this.unHiglightProcess(newTableState);
+      newTableState = this.higlightProcess(newTableState, row, col);
+
       return {table: newTableState, sums: this.getSums(newTableState, this.props.rows, this.props.cols)};
-    }, () => {
-      this.unHiglightProcess();
-      this.higlightProcess(row, col);
     });
-
-
   }
 
   onCellOver(e, row, col) {
-    this.higlightProcess(row, col);
+    this.setState(state => {
+      return {table: this.higlightProcess(state.table, row, col)};
+    });
   }
 
   onCellOut(e, row, col) {
-    this.unHiglightProcess();
+    this.setState(state => {
+      return {table: this.unHiglightProcess(state.table)};
+    });
   }
 
-  higlightProcess(cellRow, cellCol) {
-    let cellSelected = this.state.table[cellRow][cellCol];
+  // MUTABLE ARGUMENTS!
+  higlightProcess(table, cellRow, cellCol) {
+    let cellSelected = table[cellRow][cellCol];
 
-    this.sortedCells = this.state.table.reduce((cells, row, rowIndex) => {
+    let sortedCells = table.reduce((cells, row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         cells.push({
           row: rowIndex,
@@ -176,7 +176,7 @@ const Table = class Table extends React.Component {
       return cells;
     }, []);
 
-    this.sortedCells = this.sortedCells.sort((a, b) => {
+    sortedCells = sortedCells.sort((a, b) => {
       if(a.amountDiff < b.amountDiff) return -1;
       if(a.amountDiff > b.amountDiff) return 1;
       if(a.amountDiff === b.amountDiff) return 0;
@@ -184,44 +184,34 @@ const Table = class Table extends React.Component {
 
     this.higlighted = [];
 
-    let sortedCellsLength = this.sortedCells.length;
+    let sortedCellsLength = sortedCells.length;
 
     for(let selected = 0, i = 0; selected < this.props.x; i++) {
       if(sortedCellsLength === i) return;
-      if(this.sortedCells[i].cell === cellSelected) continue;
+      if(sortedCells[i].cell === cellSelected) continue;
 
-      this.higlighted[selected] = this.sortedCells[i];
+      this.higlighted[selected] = sortedCells[i];
 
-      this.higlightCell(this.sortedCells[i].row, this.sortedCells[i].col);
+      this.markChangedRows(sortedCells[i].row);
+      table[sortedCells[i].row][sortedCells[i].col].higlight = true;
       selected++;
     }
+
+    return table;
   }
 
-  unHiglightProcess() {
+  // MUTABLE ARGUMENTS!
+  unHiglightProcess(table) {
     let higlightedLength = this.higlighted.length;
 
     for(let i = 0; i < this.props.x; i++) {
       if(higlightedLength === i) return;
-      this.unHiglightCell(this.higlighted[i].row, this.higlighted[i].col);
+
+      this.markChangedRows(this.higlighted[i].row);
+      table[this.higlighted[i].row][this.higlighted[i].col].higlight = false;
     }
-  }
 
-  higlightCell(row, col) {
-    this.setCellHighlight(row, col, true);
-  }
-
-  unHiglightCell(row, col) {
-    this.setCellHighlight(row, col, false);
-  }
-
-  setCellHighlight(row, col, light) {
-    this.markChangedRows(row);
-
-    this.setState(state => {
-      state.table[row][col].higlight = light;
-
-      return state;
-    });
+    return table;
   }
 
   getPercent = (index, value) => {
@@ -249,7 +239,6 @@ const Table = class Table extends React.Component {
       });
 
       return {};
-
     });
   }
 
