@@ -2,7 +2,7 @@ import React from 'react';
 
 const PageCreateTable = (props) => {
   return (
-      <div>
+      <div className="page-create-table">
         <h1>Построить таблицу</h1>
 
         <form onSubmit={props.onSubmit}>
