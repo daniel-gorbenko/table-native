@@ -20,10 +20,7 @@ const Table = class Table extends React.Component {
       table: this.generateTableData()
     };
 
-    this.state.sums = {
-      rows: this.getRowsSums(),
-      cols: this.getColsSums()
-    };
+    this.state.sums = this.getSums(this.state.table, props.rows, props.cols);
 
     this.getPercent= this.getPercent.bind(this);
     this.onCellClick= this.onCellClick.bind(this);
@@ -77,57 +74,52 @@ const Table = class Table extends React.Component {
                     );
   }
 
-  calcSums() {
-    let sums = {
-        rows: this.getRowsSums(),
-        cols: this.getColsSums()
+  getSums(table, rows, cols) {
+    return {
+      rows: this.getRowsSums(table, rows, cols),
+      cols: this.getColsSums(table, rows, cols)
     };
-
-    this.setState({sums});
   }
 
-  getRowsSums() {
+  getRowsSums(table, rowsCount, colsCount) {
     let rows = [];
 
-    for(let i = 0; i < this.props.rows; i++) {
-      rows[i] = this.calcSumByRow(i);
+    for(let i = 0; i < rowsCount; i++) {
+      rows[i] = this.calcSumByRow(i, table, colsCount);
     }
 
     return rows;
   }
 
-  getColsSums() {
+  getColsSums(table, rowsCount, colsCount) {
     let cols = [];
 
-    for(let i = 0; i < this.props.cols; i++) {
-      cols[i] = this.calcSumByCol(i);
+    for(let i = 0; i < colsCount; i++) {
+      cols[i] = this.calcSumByCol(i, table, rowsCount);
     }
 
     return cols;
   }
 
-  getSumsByCell(row, col) {
-    return {
-      row: this.calcSumByRow(row),
-      col: this.calcSumByCol(col)
-    }
-  }
+  calcSumByRow(row, table, colsCount) {
+    let tbl = table || this.state.table;
 
-  calcSumByRow(row) {
     let sumByRow = 0;
 
-    for(let i = 0; i < this.props.cols; i++) {
-      sumByRow += this.state.table[row][i].amount;
+    for(let i = 0; i < colsCount; i++) {
+      sumByRow += tbl[row][i].amount;
     }
 
     return sumByRow;
   }
 
-  calcSumByCol(col) {
+  calcSumByCol(col, table, rowsCount) {
+    let tbl = table || this.state.table;
+
     let sumByCol = 0;
 
-    for(let i = 0; i < this.props.rows; i++) {
-      sumByCol += this.state.table[i][col].amount;
+    for(let i = 0; i < rowsCount; i++) {
+      sumByCol += tbl[i][col].amount;
     }
 
     return sumByCol;
@@ -144,7 +136,6 @@ const Table = class Table extends React.Component {
   onCellClick(e, row, col) {
     this.markChangedRows(row);
 
-    // TODO:
     this.setState(state => {
       let newTableState = [...this.state.table];
       newTableState[row] = [...newTableState[row]];
@@ -152,10 +143,8 @@ const Table = class Table extends React.Component {
         amount: newTableState[row][col].amount + 1
       });
 
-      return {table: newTableState};
+      return {table: newTableState, sums: this.getSums(newTableState, this.props.rows, this.props.cols)};
     }, () => {
-      this.calcSums();
-
       this.unHiglightProcess();
       this.higlightProcess(row, col);
     });
@@ -229,7 +218,6 @@ const Table = class Table extends React.Component {
     this.markChangedRows(row);
 
     this.setState(state => {
-      // let state = Object.assign({}, stateCurrent);
       state.table[row][col].higlight = light;
 
       return state;
@@ -237,7 +225,7 @@ const Table = class Table extends React.Component {
   }
 
   getPercent = (index, value) => {
-    return (value / this.calcSumByRow(index) * 100).toFixed(2);
+    return (value / this.calcSumByRow(index, this.state.table, this.props.cols) * 100).toFixed(2);
   }
 
   onSumCellOver(row) {
@@ -276,9 +264,7 @@ const Table = class Table extends React.Component {
       this.rowIdList[this.rowIdList.length] = this.getNextRowId();
       this.rowChanges[this.rowChanges.length] = true;
 
-      return {table: table};
-    }, () => {
-      this.calcSums();
+      return {table: table, sums: this.getSums(table, table.length, this.props.cols)};
     });
 
     this.props.onRowAdd(e);
@@ -297,9 +283,11 @@ const Table = class Table extends React.Component {
       this.rowIdList.splice(row, 1);
       this.rowChanges.splice(row, 1);
 
-      return {table: table};
-    }, () => {
-      this.calcSums();
+      for(let i = row, l = table.length; i < l; i++) {
+        this.markChangedRows(i);
+      }
+
+      return {table: table, sums: this.getSums(table, table.length, this.props.cols)};
     });
   }
 
@@ -358,26 +346,3 @@ const Table = class Table extends React.Component {
 };
 
 export default Table;
-
-
-// <Row key={this.rowIdList[i]} changed={this.rowChanges[i]}>
-//   {this.state.table[i].map((cell, colIndex) =>
-//     <PercentCell
-//       key={colIndex}
-//       percentValue={this.getPercent(i, cell.amount)}
-//       onClick={(e) => this.onCellClick(e, i, colIndex)}
-//       onMouseOver={(e) => this.onCellOver(e, i, colIndex)}
-//       onMouseOut={(e) => this.onCellOut(e, i, colIndex)}
-//       over={cell.over}
-//       value={cell.amount}
-//       higlight={cell.higlight}
-//       />
-//   )}
-//   <SumCell
-//     onMouseOver={(e) => this.onSumCellOver(i)}
-//     onMouseOut={(e) => this.onSumCellOut(i)}
-//     onRowRemove={(e) => this.onRowRemove(e, i)}
-//     value={this.state.table[i].reduce((s, cell) =>  s + cell.amount, 0)}
-//     />
-// </Row>
-//

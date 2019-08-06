@@ -7,17 +7,6 @@ class TableRowSumCell extends React.Component {
     super(props);
   }
 
-  shouldComponentUpdate(nextProps) {
-    if(nextProps.higlight === this.props.higlight
-      && nextProps.amount === this.props.amount
-      && nextProps.over === this.props.over
-    )  {
-      return false;
-    }
-
-    return true;
-  }
-
   render() {
     return (
       <SumCell
