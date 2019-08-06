@@ -5,11 +5,11 @@
 [https://daniel-gorbenko.github.io/table-native/](https://daniel-gorbenko.github.io/table-native/)
 
 ### Performance
-Using non-composite components
+#### Using non-composite components
 ![Non-composite](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-non-composite.png)
-Using composite components
+#### Using composite components
 ![Composite](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-composite.png)
-Performance comparison of non-composite and composite components
+#### Performance comparison of non-composite and composite components
 ![Comparison](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/comparison.png)
 
 ### Increment an amount
