@@ -351,6 +351,10 @@ const Table = class Table extends React.Component {
   componentDidUpdate() {
     this.unmarkChangedRows();
   }
+
+  componentDidMount() {
+    this.unmarkChangedRows();
+  }
 };
 
 export default Table;
