@@ -4,14 +4,16 @@ import Cell from '../cell/cell';
 import PercentCell from '../percent-cell/percent-cell';
 import SumCell from '../sum-cell/sum-cell';
 import Row from '../row/row';
+import TableRow from '../table-row/table-row';
 
-export default class Table extends React.Component {
+const Table = class Table extends React.Component {
   constructor(props) {
     super(props);
 
     this.amountDigitsIndex = props.amountDigits + 2;
 
     this.rowIdList = [];
+    this.rowChanges = [];
     this._currentRowId = -1;
 
     this.state = {
@@ -22,6 +24,15 @@ export default class Table extends React.Component {
       rows: this.getRowsSums(),
       cols: this.getColsSums()
     };
+
+    this.getPercent= this.getPercent.bind(this);
+    this.onCellClick= this.onCellClick.bind(this);
+    this.onCellOver= this.onCellOver.bind(this);
+    this.onCellOut= this.onCellOut.bind(this);
+
+    this.onSumCellOver= this.onSumCellOver.bind(this);
+    this.onSumCellOut= this.onSumCellOut.bind(this);
+    this.onRowRemove= this.onRowRemove.bind(this);
   }
 
   getNextRowId() {
@@ -34,6 +45,7 @@ export default class Table extends React.Component {
     for(let i = 0; i < this.props.rows; i++) {
       table[i] = this.generateRowData(i);
       this.rowIdList[i] = this.getNextRowId();
+      this.rowChanges[i] = true;
     }
 
     return table;
@@ -121,7 +133,17 @@ export default class Table extends React.Component {
     return sumByCol;
   }
 
+  markChangedRows(row) {
+    this.rowChanges[row] = true;
+  }
+
+  unmarkChangedRows() {
+    this.rowChanges = this.rowChanges.map(() => false);
+  }
+
   onCellClick(e, row, col) {
+    this.markChangedRows(row);
+
     // TODO:
     this.setState(state => {
       let newTableState = [...this.state.table];
@@ -137,6 +159,8 @@ export default class Table extends React.Component {
       this.unHiglightProcess();
       this.higlightProcess(row, col);
     });
+
+
   }
 
   onCellOver(e, row, col) {
@@ -202,6 +226,8 @@ export default class Table extends React.Component {
   }
 
   setCellHighlight(row, col, light) {
+    this.markChangedRows(row);
+
     this.setState(state => {
       // let state = Object.assign({}, stateCurrent);
       state.table[row][col].higlight = light;
@@ -210,11 +236,13 @@ export default class Table extends React.Component {
     });
   }
 
-  getPercent(index, value) {
+  getPercent = (index, value) => {
     return (value / this.calcSumByRow(index) * 100).toFixed(2);
   }
 
   onSumCellOver(row) {
+    this.markChangedRows(row);
+
     this.setState(state => {
       state.table[row].forEach((cell) => {
         cell.over = true;
@@ -225,6 +253,8 @@ export default class Table extends React.Component {
   }
 
   onSumCellOut(row) {
+    this.markChangedRows(row);
+
     this.setState(state => {
       state.table[row].forEach((cell) => {
         cell.over = false;
@@ -244,6 +274,7 @@ export default class Table extends React.Component {
 
       table[table.length] = this.generateRowData(state.table.length);
       this.rowIdList[this.rowIdList.length] = this.getNextRowId();
+      this.rowChanges[this.rowChanges.length] = true;
 
       return {table: table};
     }, () => {
@@ -264,6 +295,7 @@ export default class Table extends React.Component {
 
       table.splice(row, 1);
       this.rowIdList.splice(row, 1);
+      this.rowChanges.splice(row, 1);
 
       return {table: table};
     }, () => {
@@ -276,24 +308,22 @@ export default class Table extends React.Component {
 
     for(let i = 0; i < this.props.rows; i++) {
       rows.push(
-        <Row key={this.rowIdList[i]} dataAttr={this.rowIdList[i]}>
-          {this.state.table[i].map((cell, colIndex) =>
-            <PercentCell
-              key={colIndex}
-              percentValue={this.getPercent(i, cell.amount)}
-              onClick={(e) => this.onCellClick(e, i, colIndex)}
-              onMouseOver={(e) => this.onCellOver(e, i, colIndex)}
-              onMouseOut={(e) => this.onCellOut(e, i, colIndex)}
-              over={cell.over}
-              value={cell.amount}
-              higlight={cell.higlight}/>
-          )}
-          <SumCell
-            onMouseOver={(e) => this.onSumCellOver(i)}
-            onMouseOut={(e) => this.onSumCellOut(i)}
-            onRowRemove={(e) => this.onRowRemove(e, i)}
-            value={this.state.table[i].reduce((s, cell) =>  s + cell.amount, 0)}/>
-        </Row>
+        <TableRow
+          index={i}
+          cells={this.state.table[i]}
+          key={this.rowIdList[i]}
+          changed={this.rowChanges[i]}
+
+          getPercent={this.getPercent}
+          onCellClick={this.onCellClick}
+          onCellOver={this.onCellOver}
+          onCellOut={this.onCellOut}
+
+          onSumCellOver={this.onSumCellOver}
+          onSumCellOut={this.onSumCellOut}
+          onRowRemove={this.onRowRemove}
+          sumCellValue={this.state.table[i].reduce((s, cell) =>  s + cell.amount, 0)}
+          />
       );
     }
 
@@ -308,7 +338,7 @@ export default class Table extends React.Component {
           {rows}
         </tbody>
         <tfoot>
-          <Row>
+          <Row changed={true}>
             {this.state.sums.cols.map((sum, index) =>
               <Cell key={index} value={sum}/>
             )}
@@ -317,4 +347,33 @@ export default class Table extends React.Component {
       </table>
     );
   }
-}
+
+  componentDidUpdate() {
+    this.unmarkChangedRows();
+  }
+};
+
+export default Table;
+
+
+// <Row key={this.rowIdList[i]} changed={this.rowChanges[i]}>
+//   {this.state.table[i].map((cell, colIndex) =>
+//     <PercentCell
+//       key={colIndex}
+//       percentValue={this.getPercent(i, cell.amount)}
+//       onClick={(e) => this.onCellClick(e, i, colIndex)}
+//       onMouseOver={(e) => this.onCellOver(e, i, colIndex)}
+//       onMouseOut={(e) => this.onCellOut(e, i, colIndex)}
+//       over={cell.over}
+//       value={cell.amount}
+//       higlight={cell.higlight}
+//       />
+//   )}
+//   <SumCell
+//     onMouseOver={(e) => this.onSumCellOver(i)}
+//     onMouseOut={(e) => this.onSumCellOut(i)}
+//     onRowRemove={(e) => this.onRowRemove(e, i)}
+//     value={this.state.table[i].reduce((s, cell) =>  s + cell.amount, 0)}
+//     />
+// </Row>
+//

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default (props) => {
+const PageCreateTable = (props) => {
   return (
       <div>
         <h1>Построить таблицу</h1>
@@ -15,3 +15,5 @@ export default (props) => {
       </div>
     );
 };
+
+export default PageCreateTable;

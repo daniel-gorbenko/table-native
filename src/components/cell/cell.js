@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default (props) => {
+const Cell = (props) => {
   return <td className={props.className}
              onClick={props.onClick}
              onMouseEnter={props.onMouseOver}
@@ -8,4 +8,6 @@ export default (props) => {
               <span className="amount">{props.value}</span>
               {props.children}
          </td>;
-}
+};
+
+export default  Cell;

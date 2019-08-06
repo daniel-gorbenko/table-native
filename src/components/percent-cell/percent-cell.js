@@ -2,37 +2,33 @@ import Cell from '../cell/cell';
 
 import React from 'react';
 
-export default (props) => {
-  let classes = [
-    props.higlight ? 'higlight' : '',
-    props.over ? 'over' : ''
-  ];
+class PercentCell extends React.Component {
+  constructor(props) {
+    super(props);
+  }
 
-  let className = classes.join(' ');
+  render() {
+    let classes = [
+      this.props.higlight ? 'higlight' : '',
+      this.props.over ? 'over' : ''
+    ];
 
-  let style = {
-    height: props.percentValue + '%'
-  };
+    let className = classes.join(' ');
 
-  return (
-    <Cell className={className} value={props.value}
-    onClick={props.onClick}
-    onMouseOver={props.onMouseOver}
-    onMouseOut={props.onMouseOut}>
-      <span className="percent_value">{props.percentValue}%</span>
-      <div className="percent" style={style}></div>
-    </Cell>
-  );
-}
+    let style = {
+      height: this.props.percentValue + '%'
+    };
 
-//   shouldComponentUpdate(nextProps, nextState) {
-//     if(nextProps.higlight === this.props.higlight
-//       && nextProps.value === this.props.value
-//       && nextProps.percentValue === this.props.percentValue
-//       && nextProps.over === this.props.over
-//     )  {
-//       return false;
-//     }
-//
-//     return true;
-//   }
+    return (
+      <Cell className={className} value={this.props.value}
+      onClick={this.props.onClick}
+      onMouseOver={this.props.onMouseOver}
+      onMouseOut={this.props.onMouseOut}>
+        <span className="percent_value">{this.props.percentValue}%</span>
+        <div className="percent" style={style}></div>
+      </Cell>
+    );
+  }
+};
+
+export default PercentCell;

@@ -3,7 +3,7 @@ import React from 'react';
 import PageCreateTable from '../page-create-table/page-create-table';
 import PageTable from '../page-table/page-table';
 
-export default class App extends React.Component {
+const App = class App extends React.Component {
   constructor(props) {
     super(props);
 
@@ -72,4 +72,6 @@ export default class App extends React.Component {
 
     return page;
   }
-}
+};
+
+export default App;
