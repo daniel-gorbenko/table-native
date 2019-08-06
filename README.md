@@ -10,7 +10,7 @@
 #### Using composite components
 ![Composite](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-composite.png)
 #### Performance comparison of non-composite and composite components
-![Comparison](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/comparison.png)
+![Comparison](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-comparison.png)
 
 ### Increment an amount
 To incerement an amount of any cell click on a cell.
