@@ -1,11 +1,16 @@
 # table-native
-## Table component created using native JavaScript
+## Table component created using ReactJS
 
 ### Demo:
 [https://daniel-gorbenko.github.io/table-native/](https://daniel-gorbenko.github.io/table-native/)
 
-![Create table](https://raw.githubusercontent.com/daniel-gorbenko/table-native/master/img/create-table.png)
-![Created table](https://raw.githubusercontent.com/daniel-gorbenko/table-native/master/img/created-table.png)
+### Performance
+Using non-composite components
+![Non-composite](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-non-composite.png)
+Using composite components
+![Composite](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/performance-composite.png)
+Performance comparison of non-composite and composite components
+![Comparison](https://raw.githubusercontent.com/daniel-gorbenko/table-native/react/img/comparison.png)
 
 ### Increment an amount
 To incerement an amount of any cell click on a cell.
