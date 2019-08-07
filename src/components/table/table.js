@@ -143,22 +143,27 @@ const Table = (props) => {
       table[row][col].amount += 1;
 
       calcSums(props.rows, props.cols, table);
-      unHiglightProcess();
-      higlightProcess(row, col);
+      table = unHiglightProcess(table);
+      table = higlightProcess(table, row, col);
 
-      return [...table];
+      return table;
     });
   }
 
   function onCellOver(e, row, col) {
-    higlightProcess(row, col);
+    setTable(table => {
+      return higlightProcess(table, row, col);
+    });
   }
 
   function onCellOut(e, row, col) {
-    unHiglightProcess();
+    setTable(table => {
+      return unHiglightProcess(table);
+    });
   }
 
-  function higlightProcess(cellRow, cellCol) {
+    // MUTABLE ARGUMENTS!
+  function higlightProcess(table, cellRow, cellCol) {
     let cellSelected = table[cellRow][cellCol];
 
     sortedCells.current = table.reduce((cells, row, rowIndex) => {
@@ -186,40 +191,28 @@ const Table = (props) => {
 
     for(let selected = 0, i = 0; selected < props.x; i++) {
       if(sortedCellsLength === i) return;
-
       if(sortedCells.current[i].cell === cellSelected) continue;
 
       higlighted.current[selected] = sortedCells.current[i];
 
-      higlightCell(sortedCells.current[i].row, sortedCells.current[i].col);
+      table[sortedCells.current[i].row][sortedCells.current[i].col].higlight = true;
       selected++;
     }
+
+    return [...table];
   }
 
-  function unHiglightProcess() {
+  // MUTABLE ARGUMENTS!
+  function unHiglightProcess(table) {
     let higlightedLength = higlighted.current.length;
 
     for(let i = 0; i < props.x; i++) {
       if(higlightedLength === i) return;
 
-      unHiglightCell(higlighted.current[i].row, higlighted.current[i].col);
+      table[higlighted.current[i].row][higlighted.current[i].col].higlight = false;
     }
-  }
 
-  function higlightCell(row, col) {
-    setCellHighlight(row, col, true);
-  }
-
-  function unHiglightCell(row, col) {
-    setCellHighlight(row, col, false);
-  }
-
-  function setCellHighlight(row, col, light) {
-    setTable(table => {
-      table[row][col].higlight = light;
-
-      return [...table];
-    });
+    return [...table];
   }
 
   let rows = [];
