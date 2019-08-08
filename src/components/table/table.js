@@ -1,19 +1,172 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useCallback, useReducer, useMemo, useEffect} from 'react';
 
 import Cell from '../cell/cell';
 import PercentCell from '../percent-cell/percent-cell';
 import SumCell from '../sum-cell/sum-cell';
 import Row from '../row/row';
+import TableRow from '../table-row/table-row';
+
+// MUTABLE
+const onCellClick = (state, {row, col}) => {
+  state[row][col].amount += 1;
+
+  return [...state];
+};
+
+// MUTABLE
+const markRowAsChanged = (changedRows, row) => {
+  changedRows.current[row] = true;
+};
+
+// MUTABLE
+const highlightProcess = (state, {row, col, highlighted, x, changedRows}) => {
+  let cellSelected = state[row][col];
+
+  let sortedCells = state.reduce((cells, row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      cells.push({
+        row: rowIndex,
+        col: colIndex,
+        amountDiff: Math.abs(cellSelected.amount - cell.amount),
+        cell: cell
+      });
+    });
+
+    return cells;
+  }, []);
+
+  sortedCells = sortedCells.sort((a, b) => {
+    if(a.amountDiff < b.amountDiff) return -1;
+    if(a.amountDiff > b.amountDiff) return 1;
+    if(a.amountDiff === b.amountDiff) return 0;
+  });
+
+  highlighted.current = [];
+
+  let sortedCellsLength = sortedCells.length;
+
+  for(let selected = 0, i = 0; selected < x; i++) {
+    if(sortedCellsLength === i) return;
+    if(sortedCells[i].cell === cellSelected) continue;
+
+    highlighted.current[selected] = sortedCells[i];
+
+    markRowAsChanged(changedRows, sortedCells[i].row);
+    state[sortedCells[i].row][sortedCells[i].col].highlight = true;
+    selected++;
+  }
+
+  return [...state];
+}
+
+// MUTABLE
+const unhighlightProcess = (state, {highlighted, x, changedRows}) => {
+  let highlightedLength = highlighted.current.length;
+
+  for(let i = 0; i < x; i++) {
+    if(highlightedLength === i) break;
+
+    markRowAsChanged(changedRows, highlighted.current[i].row);
+    state[highlighted.current[i].row][highlighted.current[i].col].highlight = false;
+  }
+
+  return [...state];
+}
+
+// MUTABLE
+const setCellsOver = (state, {row}) => {
+  state[row].forEach((cell) => {
+    cell.over = true;
+  });
+
+  return [...state];
+};
+
+// MUTABLE
+const setCellsOut = (state, {row}) => {
+  state[row].forEach((cell) => {
+    cell.over = false;
+  });
+
+  return [...state];
+};
+
+// MUTABLE
+const rowRemove = (state, {e, row, rowIdList}) => {
+
+  console.log('console');
+  // let newState = [...state.slice(0, row), ...state.slice(row + 1)];
+  // rowIdList.current.splice(row, 1);
+  // calcSums(props.rows - 1, props.cols, table);
+
+  // onRowRemove(e);
+  return [1, 2];
+};
+
+const reducer = (state, action) => {
+  switch(action.type) {
+    case 'cell-click':
+      return highlightProcess(
+        unhighlightProcess(
+          onCellClick(state, action.payload), action.payload
+        ), action.payload
+      );
+
+    case 'cell-over':
+      return highlightProcess(
+        unhighlightProcess(state, action.payload), action.payload
+      );
+
+    case 'cell-out':
+      return unhighlightProcess(state, action.payload);
+
+    case 'sum-cell-over':
+      return setCellsOver(state, action.payload);
+
+    case 'sum-cell-out':
+      return setCellsOut(state, action.payload);
+
+    // case 'row-add':
+      // return rowAdd(state, action.payload);
+
+    case 'row-remove':
+    debugger
+      return rowRemove(state, action.payload);
+
+    default:
+      throw new Error('action.type should be exist');
+  }
+};
 
 const Table = (props) => {
   let amountDigitsIndex = props.amountDigits + 2;
 
   let rowIdList = useRef([]);
   let rowId = useRef(-1);
-  let higlighted = useRef([]);
+  let highlighted = useRef([]);
   let sortedCells = useRef([]);
-  let [table, setTable] = useState(generateTableData);
-  let [colsSums, setColsSums] = useState(getColsSums(props.rows, props.cols, table));
+  let changedRows = useRef([]);
+  let [table, dispatchTable] = useReducer(reducer, null, generateTableData);
+  let [colsSums, setColsSums] = useState(() => {
+    return getColsSums(props.rows, props.cols, table);
+  });
+
+  const tableChangedStatus = useRef(false);
+  const tableChanged = tableChangedStatus.current = useMemo(() => {
+    return !tableChangedStatus.current;
+  }, [table]);
+
+  useEffect(() => {
+    changedRows.current = unmarkChangedRows(changedRows.current);
+  });
+
+  function isChangedRow(row) {
+    return changedRows.current[row];
+  }
+
+  function unmarkChangedRows(rows) {
+    return rows.map(() => false);
+  }
 
   function getNextRowId() {
     return ++rowId.current;
@@ -92,153 +245,123 @@ const Table = (props) => {
     return sumByCol;
   }
 
-  function getPercent(index, value) {
-    return (value / calcSumByRow(index) * 100).toFixed(2);
-  }
-
-  function onRowRemove(e, row) {
-    e.preventDefault();
-
-    table.splice(row, 1);
-    rowIdList.current.splice(row, 1);
-
-    setTable(table);
-    calcSums(props.rows - 1, props.cols, table);
-
-    props.onRowRemove(e);
-  }
+  const getPercent = useCallback((index, value) => {
+    return (value / calcSumByRow(index, table, props.cols) * 100).toFixed(2);
+  }, [props.rows, props.cols]);
+  // }, [table, props.rows, props.cols]);
 
   function onRowAdd(e, row) {
     table[table.length] = generateRowData(table.length);
     rowIdList.current[rowIdList.current.length] = getNextRowId();
 
-    setTable(table);
+    dispatchTable(table);
     calcSums(props.rows + 1, props.cols, table);
 
     props.onRowAdd(e);
   }
 
-  function onSumCellOver(row) {
-    setTable(table => {
-      table[row].forEach((cell) => {
-        cell.over = true;
-      });
-
-      return [...table];
-    });
-  }
-
-  function onSumCellOut(row) {
-    setTable(table => {
-      table[row].forEach((cell) => {
-        cell.over = false;
-      });
-
-      return [...table];
-    });
-  }
-
-  function onCellClick(e, row, col) {
-    setTable(table => {
-      table[row][col].amount += 1;
-
-      calcSums(props.rows, props.cols, table);
-      table = unHiglightProcess(table);
-      table = higlightProcess(table, row, col);
-
-      return table;
-    });
-  }
-
-  function onCellOver(e, row, col) {
-    setTable(table => {
-      return higlightProcess(table, row, col);
-    });
-  }
-
-  function onCellOut(e, row, col) {
-    setTable(table => {
-      return unHiglightProcess(table);
-    });
-  }
-
-    // MUTABLE ARGUMENTS!
-  function higlightProcess(table, cellRow, cellCol) {
-    let cellSelected = table[cellRow][cellCol];
-
-    sortedCells.current = table.reduce((cells, row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        cells.push({
-          row: rowIndex,
-          col: colIndex,
-          amountDiff: Math.abs(cellSelected.amount - cell.amount),
-          cell: cell
-        });
-      });
-
-      return cells;
-    }, []);
-
-    sortedCells.current = sortedCells.current.sort((a, b) => {
-      if(a.amountDiff < b.amountDiff) return -1;
-      if(a.amountDiff > b.amountDiff) return 1;
-      if(a.amountDiff === b.amountDiff) return 0;
+  const onRowRemove = useCallback((e, row) => {
+    dispatchTable({
+      type: 'row-remove',
+      payload: {
+        e: e,
+        row: row,
+        rowIdList: rowIdList
+      }
     });
 
-    higlighted.current = [];
+    // props.onRowRemove();
+  }, []);
 
-    let sortedCellsLength = sortedCells.current.length;
+  const onSumCellOver = useCallback((row) => {
+    markRowAsChanged(changedRows, row);
 
-    for(let selected = 0, i = 0; selected < props.x; i++) {
-      if(sortedCellsLength === i) return;
-      if(sortedCells.current[i].cell === cellSelected) continue;
+    dispatchTable({
+      type: 'sum-cell-over',
+      payload: {
+        row: row
+      }
+    });
+  }, []);
 
-      higlighted.current[selected] = sortedCells.current[i];
+  const onSumCellOut = useCallback((row) => {
+    markRowAsChanged(changedRows, row);
 
-      table[sortedCells.current[i].row][sortedCells.current[i].col].higlight = true;
-      selected++;
-    }
+    dispatchTable({
+      type: 'sum-cell-out',
+      payload: {
+        row: row
+      }
+    });
+  }, []);
 
-    return [...table];
-  }
+  const onCellClick = useCallback((e, row, col) => {
+    markRowAsChanged(changedRows, row);
 
-  // MUTABLE ARGUMENTS!
-  function unHiglightProcess(table) {
-    let higlightedLength = higlighted.current.length;
+    dispatchTable({
+      type: 'cell-click',
+      payload: {
+        e: e,
+        row: row,
+        col: col,
+        x: props.x,
+        highlighted: highlighted,
+        changedRows: changedRows
+      }
+    });
+  }, [props.x]);
 
-    for(let i = 0; i < props.x; i++) {
-      if(higlightedLength === i) return;
+  const onCellOver = useCallback((e, row, col) => {
+    dispatchTable({
+      type: 'cell-over',
+      payload: {
+        e: e,
+        row: row,
+        col: col,
+        x: props.x,
+        highlighted: highlighted,
+        changedRows: changedRows
+      }
+    });
+  }, [props.x]);
 
-      table[higlighted.current[i].row][higlighted.current[i].col].higlight = false;
-    }
-
-    return [...table];
-  }
+  const onCellOut = useCallback((e, row, col) => {
+    dispatchTable({
+      type: 'cell-out',
+      payload: {
+        e: e,
+        row: row,
+        col: col,
+        x: props.x,
+        highlighted: highlighted,
+        changedRows: changedRows
+      }
+    });
+  }, [props.x]);
 
   let rows = [];
 
   for(let i = 0; i < props.rows; i++) {
-    rows.push(
-      <Row key={rowIdList.current[i]}>
-        {table[i].map((cell, colIndex) =>
-          <PercentCell
-            key={colIndex}
-            percentValue={getPercent(i, cell.amount)}
-            onClick={(e) => onCellClick(e, i, colIndex)}
-            onMouseOver={(e) => onCellOver(e, i, colIndex)}
-            onMouseOut={(e) => onCellOut(e, i, colIndex)}
-            over={cell.over}
-            value={cell.amount}
-            higlight={cell.higlight}/>
-        )}
-        <SumCell
-          onMouseOver={(e) => onSumCellOver(i)}
-          onMouseOut={(e) => onSumCellOut(i)}
-          onRowRemove={(e) => onRowRemove(e, i)}
-          value={table[i].reduce((s, cell) =>  s + cell.amount, 0)}/>
-      </Row>
-    );
-  }
+      rows.push(
+        <TableRow
+          index={i}
+          cells={table[i]}
+          key={rowIdList.current[i]}
+
+          reRender={isChangedRow(i)}
+
+          getPercent={getPercent}
+          onCellClick={onCellClick}
+          onCellOver={onCellOver}
+          onCellOut={onCellOut}
+
+          onSumCellOver={onSumCellOver}
+          onSumCellOut={onSumCellOut}
+          onRowRemove={onRowRemove}
+          sumCellValue={table[i].reduce((s, cell) =>  s + cell.amount, 0)}
+          />
+      );
+    }
 
   return (
     <table>

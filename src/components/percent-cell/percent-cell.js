@@ -4,7 +4,7 @@ import React from 'react';
 
 const PercenterCell = (props) => {
   let className = [
-    props.higlight ? 'higlight' : '',
+    props.highlight ? 'highlight' : '',
     props.over ? 'over' : ''
   ].join(' ');
 
