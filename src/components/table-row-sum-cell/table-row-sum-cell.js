@@ -13,4 +13,6 @@ const TableRowSumCell = (props) => {
   );
 };
 
-export default TableRowSumCell;
+const TableRowSumCellMemo = React.memo(TableRowSumCell);
+
+export default TableRowSumCellMemo;

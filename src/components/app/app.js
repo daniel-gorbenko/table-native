@@ -13,7 +13,7 @@ const App = (props) => {
     e.preventDefault();
 
     setPage('Table');
-  };
+  }
 
   function onChange(e, name) {
     switch(name) {
@@ -22,14 +22,16 @@ const App = (props) => {
       case 'x': setX(parseInt(e.target.value)); break;
       default: break;
     }
-  };
+  }
 
-  function onRowAdd() {
-    setRows(rows + 1);
+  // ??? КАК ??? Здесь rows === 5, 6, 7, 8 ...
+  const onRowAdd = () => {
+    // А здесь rows === 5 всегда
+    setRows(state => state + 1);
   };
 
   function onRowRemove() {
-    setRows(rows - 1);
+    setRows(state => state - 1);
   };
 
   switch(page) {
